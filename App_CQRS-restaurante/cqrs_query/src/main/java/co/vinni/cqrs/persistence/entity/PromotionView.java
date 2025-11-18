@@ -1,16 +1,18 @@
-// co/vinni/cqrs/persistence/entity/PromotionView.java
 package co.vinni.cqrs.persistence.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity @Table(name="promotions_query")
+@Document(collection = "promotions")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class PromotionView {
-    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
-    private Long id;
-    @Enumerated(EnumType.STRING) private Kitchen kitchen;
-    @Enumerated(EnumType.STRING) private PromotionType type;
+
+    @Id
+    private String id;
+
+    private Kitchen kitchen;
+    private PromotionType type;
     private boolean active;
     private String targetProductCode;
 }

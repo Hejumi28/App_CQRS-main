@@ -1,0 +1,5 @@
+2025-11-18 00:14:45,000 INFO c.v.c.CqrsCommandApplication [main] Inicio la aplicación
+2025-11-18 00:14:45,568 INFO o.s.b.StartupInfoLogger [main] Starting CqrsCommandApplication using Java 23 with PID 14788 (D:\Users\Juan\Documents\Git\App_CQRS-main\App_CQRS-restaurante\cqrs_command\target\classes started by Juan in D:\Users\Juan\Documents\Git\App_CQRS-main\App_CQRS-restaurante)
+2025-11-18 00:14:45,571 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.3.5, Spring v6.1.14
+2025-11-18 00:14:45,572 INFO o.s.b.SpringApplication [main] No active profile set, falling back to 1 default profile: "default"
+2025-11-18 00:14:50,463 INFO o.s.b.StartupInfoLogger [main] Started CqrsCommandApplication in 5.357 seconds (process running for 6.453)

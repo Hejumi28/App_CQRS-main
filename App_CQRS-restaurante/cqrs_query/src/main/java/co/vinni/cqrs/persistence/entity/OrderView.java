@@ -1,18 +1,21 @@
-// co/vinni/cqrs/persistence/entity/OrderView.java
 package co.vinni.cqrs.persistence.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.math.BigDecimal;
 
-@Entity @Table(name="orders_query")
+@Document(collection = "orders")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class OrderView {
-    @Id private Long id;
+    @Id
+    private Long id;
+
     private String customer;
-    @Enumerated(EnumType.STRING) private Kitchen kitchen;
+    private Kitchen kitchen;
     private String productCode;
     private Integer quantity;
     private BigDecimal unitPrice;
-    @Enumerated(EnumType.STRING) private OrderStatus status;
+    private OrderStatus status;
 }

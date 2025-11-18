@@ -1,18 +1,20 @@
-// co/vinni/cqrs/persistence/entity/Invoice.java
 package co.vinni.cqrs.persistence.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.math.BigDecimal;
 
-@Entity @Table(name="invoices_query")
+@Document(collection = "invoices")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Invoice {
-    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @Id
     private Long id;
+
     private Long orderId;
     private String customer;
-    @Enumerated(EnumType.STRING) private Kitchen kitchen;
+    private Kitchen kitchen;
     private String productCode;
     private Integer quantity;
     private BigDecimal unitPrice;

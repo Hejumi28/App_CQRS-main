@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: cqrs_command
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bd_command
+    username: user_command
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+
+    # (command no consume, este bloque es opcional; puedes quitarlo)
+    admin:
+      fail-fast: false

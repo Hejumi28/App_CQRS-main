@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/App_CQRS-main/cqrs_command/cqrs_command.iml" filepath="$PROJECT_DIR$/App_CQRS-main/cqrs_command/cqrs_command.iml" />
+      <module fileurl="file://$PROJECT_DIR$/App_CQRS-main/cqrs_pattern.iml" filepath="$PROJECT_DIR$/App_CQRS-main/cqrs_pattern.iml" />
+      <module fileurl="file://$PROJECT_DIR$/App_CQRS-main/cqrs_query/cqrs_query.iml" filepath="$PROJECT_DIR$/App_CQRS-main/cqrs_query/cqrs_query.iml" />
+    </modules>
+  </component>
+</project>
