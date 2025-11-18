@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Restaurante — Cocina / Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+          --bg:#0b1020; --panel:#11183a; --text:#eaf1ff; --muted:#8ea2c8;
+          --border:rgba(255,255,255,.12); --brand:#6aa4ff;
+          --ok:#19c37d; --danger:#ff6b6b; --warn:#ffc857;
+          --radius:18px; --shadow:0 12px 30px rgba(0,0,0,.35);
+        }
+        body { margin:0; font-family:ui-sans-serif,system-ui; background:linear-gradient(180deg,#0a0f23 0%,#0b1020 100%); color:var(--text); }
+        .container { max-width:1100px;margin:24px auto;padding:0 16px;display:flex;flex-direction:column;gap:22px }
+        h1 { margin:0 0 6px 0; font-size:26px }
+        .card { background:linear-gradient(180deg,#0e1540 0%, #0d1335 100%); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+        .panel { padding:16px 18px }
+        .toolbar { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;flex-wrap:wrap }
+        .left { display:flex;align-items:center;gap:12px;flex-wrap:wrap }
+        .select,.btn { appearance:none; border:1px solid var(--border); background:linear-gradient(180deg,#16245d,#0d1745); color:var(--text); padding:10px 14px; border-radius:12px; font-weight:700; }
+        .btn { cursor:pointer }
+        .btn.ok { background:linear-gradient(180deg,#2fe09d,#19c37d); color:#041d12; border:none }
+        .btn.danger { background:linear-gradient(180deg,#ff817e,#ff6b6b); color:#2b0606; border:none }
+        .btn.ghost { background:rgba(255,255,255,.06); border:1px solid var(--border) }
+        table { width:100%; border-collapse:collapse; border-radius:14px }
+        th,td { padding:12px 10px; border-bottom:1px solid var(--border) }
+        th { background:rgba(255,255,255,.04); text-align:left }
+        .right { text-align:right }
+        .badge { padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800 }
+        .PENDING { background:#2e3352;color:#c7d2ff }
+        .ACCEPTED { background:#133c2a;color:#bff3df }
+        .REJECTED { background:#4a1b1b;color:#ffd2d2 }
+        .muted { color:var(--muted);font-size:14px }
+        .pill { font-size:12px; padding:4px 8px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid var(--border) }
+        .alert { padding:10px 12px; border-radius:10px; margin-bottom:12px }
+        .alert.info { background:rgba(106,164,255,.15); border:1px solid rgba(106,164,255,.35) }
+
+        select {
+          appearance: none;
+          background-color: #0d1335;
+          color: var(--text);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 10px 14px;
+          font-weight: 500;
+          box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
+        }
+        select option {
+          background-color: #11183a;
+          color: var(--text);
+        }
+        select option:hover, select option:checked {
+          background-color: #243b7a;
+          color: #ffffff;
+        }
+        select:focus {
+          outline: none;
+          border-color: var(--brand);
+          box-shadow: 0 0 0 2px rgba(106,164,255,0.4);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="toolbar">
+        <h1>🍽️ Restaurante — Cocina / Admin</h1>
+        <span class="pill">Panel de control de pedidos y promociones</span>
+    </header>
+
+    <!-- PROMOCIONES -->
+    <section id="secPromos" class="card">
+        <div class="panel">
+            <div class="toolbar">
+                <div class="left">
+                    <h1>🎯 Promociones por cocina</h1>
+                    <select id="cuisine" class="select">
+                        <option value="ITALIAN">Cocina Italiana</option>
+                        <option value="ASIAN">Cocina Asiática</option>
+                    </select>
+                </div>
+            </div>
+            <div class="left" style="margin-bottom:12px; flex-wrap:wrap">
+                <select id="promoType" class="select">
+                    <option value="DISCOUNT_20">20% Descuento</option>
+                    <option value="TWO_FOR_ONE">2x1 en producto</option>
+                </select>
+                <select id="product2x1" class="select" style="display:none; min-width:220px">
+                    <option value="" disabled selected>Selecciona código de producto</option>
+                    <option value="IT01">IT01 – Spaghetti Bolognese</option>
+                    <option value="IT02">IT02 – Pizza Margherita</option>
+                    <option value="AS01">AS01 – Ramen Tonkotsu</option>
+                    <option value="AS02">AS02 – Pad Thai</option>
+                </select>
+                <button id="btnActivate" class="btn ok">✅ Activar</button>
+                <button id="btnDeactivate" class="btn danger">⛔ Desactivar</button>
+            </div>
+            <div id="promoState" class="muted">Estado: sin cambios aún.</div>
+            <div id="promoMsg" class="muted"></div>
+        </div>
+    </section>
+
+    <!-- PEDIDOS -->
+    <section id="secOrders" class="card">
+        <div class="panel">
+            <div class="toolbar">
+                <h1>🍝 Pedidos pendientes — <span id="titleCuisine">Cocina Italiana</span></h1>
+                <button id="refreshOrders" class="btn">Actualizar</button>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Cocina</th>
+                    <th>Producto</th>
+                    <th class="right">Cantidad</th>
+                    <th class="right">Total</th>
+                    <th>Estado</th>
+                    <th class="right">Acción</th>
+                </tr>
+                </thead>
+                <tbody id="tbOrders"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- FACTURAS -->
+    <section id="secInvoices" class="card">
+        <div class="panel">
+            <div class="toolbar">
+                <h1>🧾 Facturas</h1>
+                <button id="refreshInvoices" class="btn">Actualizar</button>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>OrdenID</th>
+                    <th>Cliente</th>
+                    <th>Cocina</th>
+                    <th class="right">Subtotal</th>
+                    <th class="right">Descuento</th>
+                    <th class="right">IVA</th>
+                    <th class="right">Total</th>
+                </tr>
+                </thead>
+                <tbody id="tbInvoices"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<script>
+    const CMD_BASE = 'http://localhost:8620';
+    const QRY_BASE = 'http://localhost:8622';
+
+    const fmtCOP = n => Number(n).toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0});
+    const cuisineEl = document.getElementById('cuisine');
+    const promoTypeEl = document.getElementById('promoType');
+    const product2x1El = document.getElementById('product2x1');
+    const titleCuisineEl = document.getElementById('titleCuisine');
+
+    function setTitleCuisine() {
+      titleCuisineEl.textContent = cuisineEl.value === 'ASIAN' ? 'Cocina Asiática' : 'Cocina Italiana';
+    }
+
+    promoTypeEl.addEventListener('change', () => {
+      const show = promoTypeEl.value === 'TWO_FOR_ONE';
+      product2x1El.style.display = show ? 'inline-block' : 'none';
+    });
+
+    async function upsertPromotion(active) {
+      const kitchen = cuisineEl.value; // ITALIAN / ASIAN
+      const type = promoTypeEl.value;  // DISCOUNT_20 / TWO_FOR_ONE
+
+      const body = {
+        kitchen: kitchen,
+        promotionType: type,
+        active: active
+      };
+
+      if (type === 'TWO_FOR_ONE') {
+        const code = product2x1El.value;
+        if (!code) {
+          alert('Selecciona un código de producto para el 2x1');
+          return;
+        }
+        body.targetProductCode = code;
+      }
+
+      const res = await fetch(`${CMD_BASE}/promotions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        document.getElementById('promoMsg').textContent = 'Error actualizando promoción';
+        return;
+      }
+
+      document.getElementById('promoMsg').textContent =
+        active ? 'Promoción activada en backend CQRS.' : 'Promoción desactivada en backend CQRS.';
+      document.getElementById('promoState').textContent =
+        active
+          ? `ACTIVA • ${type === 'DISCOUNT_20' ? '20% descuento' : '2x1'} para ${kitchen}`
+          : `SIN PROMOCIÓN activa para ${kitchen}`;
+    }
+
+    document.getElementById('btnActivate').onclick = () => upsertPromotion(true);
+    document.getElementById('btnDeactivate').onclick = () => upsertPromotion(false);
+
+    // ----- Pedidos -----
+    async function loadOrders() {
+      const kitchen = cuisineEl.value;
+      setTitleCuisine();
+
+      const res = await fetch(`${QRY_BASE}/query/orders/pending?kitchen=${encodeURIComponent(kitchen)}`, { cache: 'no-store' });
+      const data = await res.json().catch(() => []);
+
+      const tb = document.getElementById('tbOrders');
+      tb.innerHTML = '';
+
+      if (!Array.isArray(data) || data.length === 0) {
+        tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:16px">No hay pedidos pendientes</td></tr>';
+        return;
+      }
+
+      data.forEach(o => {
+        const total = (o.unitPrice || 0) * (o.quantity || 0);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${o.id}</td>
+          <td>${o.customer}</td>
+          <td><span class="pill">${o.kitchen}</span></td>
+          <td>${o.productCode}</td>
+          <td class="right">${o.quantity}</td>
+          <td class="right">${fmtCOP(total)}</td>
+          <td><span class="badge ${o.status}">${o.status}</span></td>
+          <td class="right">
+            <button class="btn ok">Aceptar</button>
+            <button class="btn danger">Denegar</button>
+          </td>
+        `;
+
+        const [btnOk, btnNo] = tr.querySelectorAll('button');
+        btnOk.onclick = async () => {
+          await fetch(`${CMD_BASE}/orders/${o.id}/accept`, { method: 'PUT' });
+          await loadOrders();
+          await loadInvoices();
+        };
+        btnNo.onclick = async () => {
+          await fetch(`${CMD_BASE}/orders/${o.id}/reject`, { method: 'PUT' });
+          await loadOrders();
+          await loadInvoices();
+        };
+
+        tb.appendChild(tr);
+      });
+    }
+
+    document.getElementById('refreshOrders').onclick = loadOrders;
+
+    // ----- Facturas -----
+    async function loadInvoices() {
+      const kitchen = cuisineEl.value;
+      const res = await fetch(`${QRY_BASE}/query/invoices`, { cache: 'no-store' });
+      const data = await res.json().catch(() => []);
+
+      const tb = document.getElementById('tbInvoices');
+      tb.innerHTML = '';
+
+      if (!Array.isArray(data) || data.length === 0) {
+        tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:16px">No hay facturas</td></tr>';
+        return;
+      }
+
+      data
+        .filter(i => !i.kitchen || i.kitchen === kitchen) // si tu InvoiceView tiene kitchen
+        .forEach(i => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${i.orderId}</td>
+            <td>${i.customer}</td>
+            <td>${i.kitchen || '-'}</td>
+            <td class="right">${fmtCOP(i.subtotal || 0)}</td>
+            <td class="right">${fmtCOP(i.discount || 0)}</td>
+            <td class="right">${fmtCOP(i.iva || 0)}</td>
+            <td class="right">${fmtCOP(i.total || 0)}</td>
+          `;
+          tb.appendChild(tr);
+        });
+    }
+
+    document.getElementById('refreshInvoices').onclick = loadInvoices;
+
+    // ----- Cambios de cocina -----
+    cuisineEl.addEventListener('change', () => {
+      setTitleCuisine();
+      loadOrders();
+      loadInvoices();
+    });
+
+    // Auto refresh cada 4s
+    setInterval(() => {
+      loadOrders();
+      loadInvoices();
+    }, 4000);
+
+    // Inicial
+    setTitleCuisine();
+    loadOrders();
+    loadInvoices();
+</script>
+</body>
+</html>

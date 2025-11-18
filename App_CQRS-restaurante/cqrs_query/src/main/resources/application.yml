@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: cqrs_query
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bd_query
+    username: user_query
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:9092
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "co.vinni.cqrs.dto,co.vinni.cqrs.persistence.entity"
+
+server:
+  port: 8622
+
+kafka:
+  topic:
+    orders: order-events
+    promotions: promotion-events

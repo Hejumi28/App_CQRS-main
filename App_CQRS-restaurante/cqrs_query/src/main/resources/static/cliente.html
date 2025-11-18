@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Cliente — Pedido</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root{
+          --bg:#0b1020; --panel:#11183a; --muted:#8ea2c8; --text:#eaf1ff;
+          --brand:#6aa4ff; --brand-2:#8ee3ff; --ok:#19c37d; --warn:#ffc857; --danger:#ff6b6b;
+          --border:rgba(255,255,255,.12); --shadow:0 12px 30px rgba(0,0,0,.35); --radius:18px;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+          margin:0; font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial;
+          background:linear-gradient(180deg,#0a0f23 0%,#0b1020 100%); color:var(--text);
+          display:flex; flex-direction:column; gap:24px;
+        }
+        .container{max-width:1200px;margin:24px auto;padding:0 16px}
+        header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+        .title{font-size:28px;font-weight:800;letter-spacing:.2px}
+        .card{background:linear-gradient(180deg,#0e1540 0%, #0d1335 100%);border:1px solid var(--border); border-radius:var(--radius);box-shadow:var(--shadow);}
+        .panel{padding:18px 18px}
+        .row{display:grid;grid-template-columns:1fr 360px; gap:18px}
+        @media (max-width:900px){ .row{grid-template-columns:1fr} }
+        .input,.select{width:100%; background:#0c1330;border:1px solid var(--border); color:var(--text);padding:12px 14px;border-radius:12px;}
+        .muted{color:var(--muted);font-size:14px}
+        .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
+        @media (max-width:640px){ .grid{grid-template-columns:1fr} }
+        .prod{display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center;background:rgba(255,255,255,.03); border:1px solid var(--border);padding:14px; border-radius:14px;}
+        .prod h4{margin:0;font-size:16px}
+        .badge{font-size:12px; padding:4px 8px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid var(--border)}
+        .qty{display:flex; align-items:center; gap:6px; background:#0b1230;border:1px solid var(--border); border-radius:12px; padding:4px;}
+        .qty button{width:32px; height:32px; border-radius:10px; border:1px solid var(--border);background:linear-gradient(180deg,#16245d,#0d1745); color:var(--text); cursor:pointer;}
+        .qty input{width:52px; text-align:center; border:none; background:transparent; color:var(--text); font-weight:700;}
+        .summary{position:sticky; top:16px;display:flex; flex-direction:column; gap:12px;}
+        .tot{display:flex; align-items:center; justify-content:space-between;padding:14px 16px; border:1px dashed var(--border); border-radius:14px;background:rgba(255,255,255,.03);font-weight:700;}
+        .btn{appearance:none; border:none; cursor:pointer; padding:10px 14px; border-radius:12px; font-weight:800;letter-spacing:.3px;color:#071024; background:linear-gradient(180deg, var(--brand), #4d7fff);}
+        .btn.ghost{background:rgba(255,255,255,.06); color:var(--text); border:1px solid var(--border);}
+        .alert{padding:12px 14px; border-radius:12px; font-weight:600}
+        .alert.info{background:rgba(106,164,255,.12); border:1px solid rgba(106,164,255,.35)}
+        .alert.ok{background:rgba(25,195,125,.12); border:1px solid rgba(25,195,125,.35)}
+        .alert.err{background:rgba(255,107,107,.12); border:1px solid rgba(255,107,107,.35)}
+        .toolbar{display:flex;gap:8px;align-items:center}
+        .pill{font-size:12px; padding:4px 8px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid var(--border)}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="title">🍽️ Cliente — Pedido</div>
+        <div class="toolbar">
+            <span class="pill">Cliente: <b id="who">—</b></span>
+            <button id="btnLogin" class="btn">Ingresar</button>
+            <button id="btnLogout" class="btn ghost" style="display:none">Cerrar sesión</button>
+            <button id="btnFocusOrder" class="btn ghost">Ir al pedido</button>
+        </div>
+    </header>
+
+    <div class="row">
+        <section class="card">
+            <div class="panel">
+                <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap">
+                    <select id="cuisine" class="select" style="max-width:260px">
+                        <option value="ITALIAN">Cocina Italiana</option>
+                        <option value="ASIAN">Cocina Asiática</option>
+                    </select>
+                    <span class="muted">Elige tu cocina y producto. Se enviará un solo producto por pedido.</span>
+                </div>
+
+                <!-- Promo (opcional, por ahora sólo texto) -->
+                <div id="promoBanner" class="alert info" style="display:none"></div>
+
+                <!-- Catálogo -->
+                <div class="grid" id="catalog"></div>
+            </div>
+        </section>
+
+        <aside class="summary">
+            <div class="card panel">
+                <div class="muted">Resumen</div>
+                <div class="tot"><span>Total estimado</span><span id="est">$ 0</span></div>
+                <button id="send" class="btn">Enviar pedido</button>
+            </div>
+
+            <div id="sentMsg" class="alert ok" style="display:none"></div>
+            <div id="finalMsg" class="alert info" style="display:none"></div>
+        </aside>
+    </div>
+</div>
+
+<script>
+    const CMD_BASE = 'http://localhost:8620';
+
+    const fmtCOP = n =>
+      Number(n).toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0});
+
+    // Catálogo estático con código y precio
+    const CATALOG_DATA = {
+      ITALIAN: {
+        'Spaghetti Bolognese': { code:'IT01', price:28000 },
+        'Pizza Margherita':   { code:'IT02', price:32000 }
+      },
+      ASIAN: {
+        'Ramen Tonkotsu': { code:'AS01', price:30000 },
+        'Pad Thai':       { code:'AS02', price:29000 }
+      }
+    };
+
+    const selCuisineVal = () => document.getElementById('cuisine').value;
+
+    const state = {
+      user: null,
+      catalog: {},
+      quantities: {}
+    };
+
+    const USERS = { erick:'123', jeison:'456', arelis:'789' };
+
+    function setUser(u){
+      state.user = u || null;
+      if (u) sessionStorage.setItem('clientUser', u); else sessionStorage.removeItem('clientUser');
+      document.getElementById('who').textContent = state.user || '—';
+      document.getElementById('btnLogin').style.display  = state.user ? 'inline-block' : 'inline-block';
+      document.getElementById('btnLogout').style.display = state.user ? 'inline-block' : 'none';
+    }
+
+    setUser(sessionStorage.getItem('clientUser'));
+
+    document.getElementById('btnLogin').addEventListener('click', async ()=>{
+      const user = prompt('Usuario (erick / jeison / arelis):')?.trim().toLowerCase();
+      if(!user || !USERS[user]){ alert('Usuario inválido'); return; }
+      const pass = prompt('Contraseña:');
+      if(pass !== USERS[user]){ alert('Contraseña incorrecta'); return; }
+      setUser(user);
+      alert(`Bienvenido, ${user}!`);
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', ()=>{
+      setUser(null);
+      document.getElementById('sentMsg').style.display = 'none';
+      document.getElementById('finalMsg').style.display = 'none';
+    });
+
+    document.getElementById('btnFocusOrder').addEventListener('click', ()=>{
+      document.querySelector('#catalog')?.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+
+    // ----- Catálogo -----
+    function buildCatalog(){
+      const grid = document.getElementById('catalog');
+      grid.innerHTML = '';
+
+      Object.entries(state.catalog).forEach(([name, info])=>{
+        const q = Number(state.quantities[name] || 0);
+
+        const el = document.createElement('div');
+        el.className = 'prod';
+        el.innerHTML = `
+          <div>
+            <h4>${name} <span class="badge">${fmtCOP(info.price)}</span></h4>
+          </div>
+          <div class="qty">
+            <button type="button" data-name="${name}" data-d="-1">-</button>
+            <input type="number" min="0" value="${q}" data-name="${name}">
+            <button type="button" data-name="${name}" data-d="1">+</button>
+          </div>`;
+
+        const input = el.querySelector('input');
+        el.querySelectorAll('button').forEach(b=>{
+          b.addEventListener('click', ()=>{
+            const d = Number(b.dataset.d);
+            const item = b.dataset.name;
+            const newV = Math.max(0, Number((state.quantities[item]||0)) + d);
+            state.quantities[item] = newV;
+            input.value = newV;
+            updateEstimate();
+          });
+        });
+        input.addEventListener('input', ()=>{
+          const v = Math.max(0, Number(input.value||0));
+          state.quantities[input.dataset.name] = v;
+          updateEstimate();
+        });
+
+        grid.appendChild(el);
+      });
+
+      updateEstimate();
+    }
+
+    function loadCatalog(){
+      const cuisine = selCuisineVal(); // ITALIAN / ASIAN
+      state.catalog = CATALOG_DATA[cuisine] || {};
+      const newQuantities = {};
+      Object.keys(state.catalog).forEach(name => newQuantities[name] = state.quantities[name] || 0);
+      state.quantities = newQuantities;
+      buildCatalog();
+    }
+
+    function updateEstimate(){
+      let total = 0;
+      Object.entries(state.quantities).forEach(([name, q])=>{
+        const info = state.catalog[name];
+        if (!info) return;
+        total += (info.price || 0) * Number(q||0);
+      });
+      document.getElementById('est').textContent = fmtCOP(total);
+    }
+
+    document.getElementById('cuisine').addEventListener('change', ()=>{
+      state.quantities = {};
+      loadCatalog();
+    });
+
+    // ----- Envío de pedido a CQRS COMMAND -----
+    function showSent(order){
+      const sent = document.getElementById('sentMsg');
+      sent.innerHTML =
+        `Pedido enviado ✅ (ID: <b>${order.id}</b>)<br>` +
+        `Producto: <b>${order.productCode}</b> × <b>${order.quantity}</b> — Cocina: <b>${order.kitchen}</b>`;
+      sent.style.display = 'block';
+
+      const f = document.getElementById('finalMsg');
+      f.className = 'alert info';
+      f.innerHTML = 'Tu pedido fue registrado. El restaurante lo verá en la pantalla de cocina.';
+      f.style.display = 'block';
+    }
+
+async function sendOrder(){
+  if(!state.user){
+    alert('Primero inicia sesión.');
+    return;
+  }
+
+  const selected = Object.entries(state.quantities)
+    .filter(([,q])=> Number(q||0) > 0);
+
+  if(selected.length === 0){
+    alert('Selecciona al menos un producto (con cantidad mayor que 0).');
+    return;
+  }
+  if(selected.length > 1){
+    alert('Por ahora este backend CQRS solo soporta 1 producto por pedido. Deja cantidad > 0 solo en un producto.');
+    return;
+  }
+
+  const [name, qty] = selected[0];
+  const info = state.catalog[name];
+  if(!info){
+    alert('Error interno con el catálogo.');
+    return;
+  }
+
+  const body = {
+    customer: state.user,
+    kitchen: selCuisineVal(),      // "ITALIAN" / "ASIAN"
+    productCode: info.code,
+    quantity: Number(qty),
+    unitPrice: info.price
+  };
+
+  try {
+    const res = await fetch(`${CMD_BASE}/orders`, {   // <- sin / final para matchear al @PostMapping
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+
+    if(!res.ok){
+      const text = await res.text().catch(()=> '');
+      alert(`Error creando pedido en CQRS COMMAND: ${res.status} ${res.statusText}\n${text}`);
+      return;
+    }
+
+    const data = await res.json().catch(()=>null);
+    if(!data || data.id == null){
+      alert('El backend no devolvió un ID de pedido.');
+      return;
+    }
+
+    showSent(data);   // muestra el resumen en la derecha
+  } catch (e) {
+    console.error('Error en fetch /orders:', e);
+    alert('No se pudo contactar el servidor de órdenes (COMMAND). Revisa si está arriba en http://localhost:8620');
+  }
+}
+
+
+    document.getElementById('send').addEventListener('click', sendOrder);
+
+    // Inicial
+    loadCatalog();
+</script>
+</body>
+</html>
