@@ -1,0 +1,5 @@
+2025-11-17 22:50:15,907 INFO c.v.c.CqrsQueryApplication [main] Inicio la aplicación Query
+2025-11-17 22:50:16,415 INFO o.s.b.StartupInfoLogger [main] Starting CqrsQueryApplication using Java 23 with PID 18384 (C:\Users\Juan\Desktop\App_CQRS-main\cqrs_query\target\classes started by Juan in C:\Users\Juan\Desktop\App_CQRS-main)
+2025-11-17 22:50:16,420 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.3.5, Spring v6.1.14
+2025-11-17 22:50:16,420 INFO o.s.b.SpringApplication [main] No active profile set, falling back to 1 default profile: "default"
+2025-11-17 22:50:20,663 INFO o.s.b.StartupInfoLogger [main] Started CqrsQueryApplication in 4.672 seconds (process running for 5.912)
